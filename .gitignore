@@ -1,0 +1,24 @@
+# Data files (too large for git)
+data/*.csv
+data/*.xlsx
+data/*.zip
+data/*.shp
+data/*.dbf
+data/*.shx
+data/*.prj
+data/*.geojson
+
+# R temporary files
+.Rhistory
+.RData
+.Rproj.user
+
+# Quarto temporary files
+/.quarto/
+_site/
+*_files/
+
+# OS files
+.DS_Store
+Thumbs.db
+

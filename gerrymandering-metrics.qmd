@@ -1,11 +1,373 @@
 ---
-title: Gerrymandering Metrics
+title: "Gerrymandering Metrics"
 format: typst
 ---
 
-### 2024 Election Results and the 2024 District Map
+# Gerrymandering Analysis: 2024 vs AB 604
 
+## Setup
 
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(scales)
+```
 
-### 2024 Election Results and the proposed 2025 District Map
+## Helper Functions
 
+```{r}
+# Calculate wasted votes for two parties
+calculate_wasted_votes <- function(votes_a, votes_b) {
+  # votes_a and votes_b are vectors of votes by district
+  total_votes <- votes_a + votes_b
+  win_threshold <- total_votes / 2
+
+  # For party A:
+  # - In districts A wins: wasted = votes above threshold (surplus)
+  # - In districts A loses: wasted = all votes
+  wasted_a <- ifelse(votes_a > votes_b,
+                     votes_a - win_threshold,  # surplus in won districts
+                     votes_a)                   # all votes in lost districts
+
+  # For party B: same logic
+  wasted_b <- ifelse(votes_b > votes_a,
+                     votes_b - win_threshold,
+                     votes_b)
+
+  return(list(wasted_a = wasted_a, wasted_b = wasted_b))
+}
+
+# Calculate mean-median score
+calculate_mean_median <- function(vote_shares) {
+  # vote_shares: vector of vote shares for one party across districts
+  mean_share <- mean(vote_shares, na.rm = TRUE)
+  median_share <- median(vote_shares, na.rm = TRUE)
+  return(mean_share - median_share)
+}
+
+# Calculate efficiency gap
+calculate_efficiency_gap <- function(votes_a, votes_b) {
+  wasted <- calculate_wasted_votes(votes_a, votes_b)
+  total_votes <- sum(votes_a + votes_b)
+  gap <- (sum(wasted$wasted_a) - sum(wasted$wasted_b)) / total_votes
+  return(gap)
+}
+
+cat("✓ Helper functions loaded\n")
+```
+
+# Part 4: 2024 Election Results and the 2024 District Map
+
+## Load and Prepare Data
+
+```{r}
+# Load cleaned precinct data
+precinct_data <- read_csv("data/g24_sov_by_g24_svprec_clean.csv", show_col_types = FALSE)
+
+# Load candidate information
+candidates <- read_csv("data/g24-candidates-by-district.csv", show_col_types = FALSE)
+
+# Get congressional candidates only
+cong_candidates <- candidates %>%
+  filter(DISTRICT_TYPE == "CNG")
+
+cat("Data loaded:\n")
+cat("  Precincts:", nrow(precinct_data), "\n")
+cat("  Congressional candidates:", nrow(cong_candidates), "\n\n")
+```
+
+## Map Candidates to Parties
+
+```{r}
+# Create mapping of vote columns to parties
+party_mapping <- cong_candidates %>%
+  select(FIELD, DISTRICT, NAME) %>%
+  mutate(party = case_when(
+    grepl("DEM", FIELD) ~ "Democrat",
+    grepl("REP", FIELD) ~ "Republican",
+    grepl("IND", FIELD) ~ "Independent",
+    grepl("LIB", FIELD) ~ "Libertarian",
+    grepl("GRN", FIELD) ~ "Green",
+    TRUE ~ "Other"
+  ))
+
+cat("Party breakdown:\n")
+print(table(party_mapping$party))
+cat("\n")
+```
+
+## Aggregate Votes by Party and District (2024)
+
+```{r}
+# Get congressional vote columns
+cong_vote_cols <- names(precinct_data)[grep("^CNG", names(precinct_data))]
+
+# Aggregate to district level
+district_votes_2024 <- precinct_data %>%
+  filter(!is.na(CDDIST)) %>%
+  group_by(CDDIST) %>%
+  summarise(across(all_of(cong_vote_cols), ~sum(., na.rm = TRUE)),
+            .groups = "drop")
+
+# Pivot to long format and join with party info
+district_party_votes_2024 <- district_votes_2024 %>%
+  pivot_longer(cols = all_of(cong_vote_cols),
+               names_to = "FIELD",
+               values_to = "votes") %>%
+  left_join(party_mapping, by = "FIELD") %>%
+  filter(votes > 0)
+
+# Sum votes by district and party
+party_totals_2024 <- district_party_votes_2024 %>%
+  group_by(CDDIST, party) %>%
+  summarise(total_votes = sum(votes), .groups = "drop") %>%
+  pivot_wider(names_from = party, values_from = total_votes, values_fill = 0)
+
+cat("2024 district-level results by party:\n")
+print(head(party_totals_2024, 10))
+cat("\n")
+```
+
+## Calculate Democrat vs Republican Metrics (2024)
+
+```{r}
+# For gerrymandering metrics, focus on D vs R (exclude third parties for now)
+dem_rep_2024 <- party_totals_2024 %>%
+  select(CDDIST, Democrat, Republican) %>%
+  mutate(
+    total = Democrat + Republican,
+    dem_share = Democrat / total,
+    rep_share = Republican / total,
+    winner = if_else(Democrat > Republican, "D", "R"),
+    margin = abs(dem_share - rep_share)
+  )
+
+cat("=== 2024 Election Results ===\n\n")
+
+# Seat counts
+seats_2024 <- table(dem_rep_2024$winner)
+cat("Seat Distribution:\n")
+cat("  Democrats:", seats_2024["D"], "seats\n")
+cat("  Republicans:", seats_2024["R"], "seats\n\n")
+
+# Mean-median score
+mm_score_2024 <- calculate_mean_median(dem_rep_2024$dem_share)
+cat("Mean-Median Score:", round(mm_score_2024, 4), "\n")
+cat("  (Positive = Democrats packed/cracked, Negative = Republicans packed/cracked)\n\n")
+
+# Efficiency gap
+eg_2024 <- calculate_efficiency_gap(dem_rep_2024$Democrat, dem_rep_2024$Republican)
+cat("Efficiency Gap:", round(eg_2024, 4), "\n")
+cat("  (Positive = Democrats waste more, Negative = Republicans waste more)\n\n")
+
+# Wasted votes breakdown
+wasted_2024 <- calculate_wasted_votes(dem_rep_2024$Democrat, dem_rep_2024$Republican)
+total_wasted_dem <- sum(wasted_2024$wasted_a)
+total_wasted_rep <- sum(wasted_2024$wasted_b)
+
+cat("Wasted Votes:\n")
+cat("  Democrats:", comma(total_wasted_dem), "\n")
+cat("  Republicans:", comma(total_wasted_rep), "\n")
+cat("  Difference:", comma(total_wasted_dem - total_wasted_rep), "\n\n")
+```
+
+## Visualize 2024 Results
+
+```{r}
+# Vote share distribution
+ggplot(dem_rep_2024, aes(x = dem_share)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  geom_vline(xintercept = mean(dem_rep_2024$dem_share),
+             color = "red", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = median(dem_rep_2024$dem_share),
+             color = "blue", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = mean(dem_rep_2024$dem_share), y = Inf,
+           label = paste0("Mean: ", percent(mean(dem_rep_2024$dem_share), 0.1)),
+           vjust = 1.5, hjust = 1.1, color = "red") +
+  annotate("text", x = median(dem_rep_2024$dem_share), y = Inf,
+           label = paste0("Median: ", percent(median(dem_rep_2024$dem_share), 0.1)),
+           vjust = 3, hjust = -0.1, color = "blue") +
+  scale_x_continuous(labels = percent) +
+  labs(title = "Distribution of Democratic Vote Share by District (2024)",
+       subtitle = paste0("Mean-Median Score: ", round(mm_score_2024, 4)),
+       x = "Democratic Vote Share",
+       y = "Number of Districts") +
+  theme_minimal()
+```
+
+# Part 6: 2024 Election Results and the AB 604 District Map
+
+## Load AB 604 Results
+
+```{r}
+# Load AB 604 district results (created in Part 5)
+ab604_results <- read_csv("data/ab604_district_results.csv", show_col_types = FALSE)
+
+cat("AB 604 results loaded:", nrow(ab604_results), "districts\n\n")
+```
+
+## Aggregate AB 604 Votes by Party
+
+```{r}
+# Same vote columns, but for AB 604 districts
+ab604_party_votes <- ab604_results %>%
+  pivot_longer(cols = all_of(cong_vote_cols),
+               names_to = "FIELD",
+               values_to = "votes") %>%
+  left_join(party_mapping, by = "FIELD") %>%
+  filter(votes > 0)
+
+# Sum by district and party
+party_totals_ab604 <- ab604_party_votes %>%
+  group_by(AB604_DISTRICT, party) %>%
+  summarise(total_votes = sum(votes), .groups = "drop") %>%
+  pivot_wider(names_from = party, values_from = total_votes, values_fill = 0)
+
+cat("AB 604 district-level results by party:\n")
+print(head(party_totals_ab604, 10))
+cat("\n")
+```
+
+## Calculate Democrat vs Republican Metrics (AB 604)
+
+```{r}
+# Focus on D vs R
+dem_rep_ab604 <- party_totals_ab604 %>%
+  select(AB604_DISTRICT, Democrat, Republican) %>%
+  mutate(
+    total = Democrat + Republican,
+    dem_share = Democrat / total,
+    rep_share = Republican / total,
+    winner = if_else(Democrat > Republican, "D", "R"),
+    margin = abs(dem_share - rep_share)
+  )
+
+cat("=== AB 604 Projected Results ===\n\n")
+
+# Seat counts
+seats_ab604 <- table(dem_rep_ab604$winner)
+cat("Seat Distribution:\n")
+cat("  Democrats:", seats_ab604["D"], "seats\n")
+cat("  Republicans:", seats_ab604["R"], "seats\n\n")
+
+# Mean-median score
+mm_score_ab604 <- calculate_mean_median(dem_rep_ab604$dem_share)
+cat("Mean-Median Score:", round(mm_score_ab604, 4), "\n")
+cat("  (Positive = Democrats packed/cracked, Negative = Republicans packed/cracked)\n\n")
+
+# Efficiency gap
+eg_ab604 <- calculate_efficiency_gap(dem_rep_ab604$Democrat, dem_rep_ab604$Republican)
+cat("Efficiency Gap:", round(eg_ab604, 4), "\n")
+cat("  (Positive = Democrats waste more, Negative = Republicans waste more)\n\n")
+
+# Wasted votes
+wasted_ab604 <- calculate_wasted_votes(dem_rep_ab604$Democrat, dem_rep_ab604$Republican)
+total_wasted_dem_ab604 <- sum(wasted_ab604$wasted_a)
+total_wasted_rep_ab604 <- sum(wasted_ab604$wasted_b)
+
+cat("Wasted Votes:\n")
+cat("  Democrats:", comma(total_wasted_dem_ab604), "\n")
+cat("  Republicans:", comma(total_wasted_rep_ab604), "\n")
+cat("  Difference:", comma(total_wasted_dem_ab604 - total_wasted_rep_ab604), "\n\n")
+```
+
+## Visualize AB 604 Results
+
+```{r}
+# Vote share distribution
+ggplot(dem_rep_ab604, aes(x = dem_share)) +
+  geom_histogram(bins = 20, fill = "steelblue", color = "white") +
+  geom_vline(xintercept = mean(dem_rep_ab604$dem_share),
+             color = "red", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = median(dem_rep_ab604$dem_share),
+             color = "blue", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = mean(dem_rep_ab604$dem_share), y = Inf,
+           label = paste0("Mean: ", percent(mean(dem_rep_ab604$dem_share), 0.1)),
+           vjust = 1.5, hjust = 1.1, color = "red") +
+  annotate("text", x = median(dem_rep_ab604$dem_share), y = Inf,
+           label = paste0("Median: ", percent(median(dem_rep_ab604$dem_share), 0.1)),
+           vjust = 3, hjust = -0.1, color = "blue") +
+  scale_x_continuous(labels = percent) +
+  labs(title = "Distribution of Democratic Vote Share by District (AB 604)",
+       subtitle = paste0("Mean-Median Score: ", round(mm_score_ab604, 4)),
+       x = "Democratic Vote Share",
+       y = "Number of Districts") +
+  theme_minimal()
+```
+
+## Comparison: 2024 vs AB 604
+
+```{r}
+cat("\n========================================\n")
+cat("COMPARISON: 2024 vs AB 604\n")
+cat("========================================\n\n")
+
+# Seat changes
+cat("Seat Distribution:\n")
+cat("                    2024    AB 604   Change\n")
+cat("  Democrats:       ", sprintf("%4d", seats_2024["D"]),
+    "    ", sprintf("%4d", seats_ab604["D"]),
+    "    ", sprintf("%+3d", seats_ab604["D"] - seats_2024["D"]), "\n")
+cat("  Republicans:     ", sprintf("%4d", seats_2024["R"]),
+    "    ", sprintf("%4d", seats_ab604["R"]),
+    "    ", sprintf("%+3d", seats_ab604["R"] - seats_2024["R"]), "\n\n")
+
+# Metric changes
+cat("Gerrymandering Metrics:\n")
+cat("                         2024      AB 604    Change\n")
+cat("  Mean-Median Score:   ", sprintf("%7.4f", mm_score_2024),
+    "   ", sprintf("%7.4f", mm_score_ab604),
+    "   ", sprintf("%+7.4f", mm_score_ab604 - mm_score_2024), "\n")
+cat("  Efficiency Gap:      ", sprintf("%7.4f", eg_2024),
+    "   ", sprintf("%7.4f", eg_ab604),
+    "   ", sprintf("%+7.4f", eg_ab604 - eg_2024), "\n\n")
+
+# Interpretation
+cat("Interpretation:\n")
+if (abs(mm_score_ab604) > abs(mm_score_2024)) {
+  cat("  ⚠ Mean-median score INCREASED in magnitude\n")
+  cat("    Suggests AB 604 may introduce more partisan advantage\n")
+} else {
+  cat("  ✓ Mean-median score DECREASED in magnitude\n")
+  cat("    Suggests AB 604 may reduce partisan advantage\n")
+}
+
+if (abs(eg_ab604) > abs(eg_2024)) {
+  cat("  ⚠ Efficiency gap INCREASED in magnitude\n")
+  cat("    Suggests AB 604 may waste more votes unevenly\n")
+} else {
+  cat("  ✓ Efficiency gap DECREASED in magnitude\n")
+  cat("    Suggests AB 604 may distribute votes more efficiently\n")
+}
+
+cat("\n")
+```
+
+## Side-by-Side Comparison
+
+```{r}
+# Combine data for comparison
+comparison_data <- bind_rows(
+  dem_rep_2024 %>% mutate(map = "2024", district = as.character(CDDIST)) %>% select(-CDDIST),
+  dem_rep_ab604 %>% mutate(map = "AB 604", district = as.character(AB604_DISTRICT)) %>% select(-AB604_DISTRICT)
+)
+
+# Plot both distributions
+ggplot(comparison_data, aes(x = dem_share, fill = map)) +
+  geom_histogram(bins = 20, alpha = 0.6, position = "identity", color = "white") +
+  geom_vline(data = data.frame(
+    map = c("2024", "AB 604"),
+    mean_val = c(mean(dem_rep_2024$dem_share), mean(dem_rep_ab604$dem_share))
+  ), aes(xintercept = mean_val, color = map), linetype = "dashed", linewidth = 1) +
+  scale_fill_manual(values = c("2024" = "gray50", "AB 604" = "steelblue")) +
+  scale_color_manual(values = c("2024" = "gray20", "AB 604" = "blue")) +
+  scale_x_continuous(labels = percent) +
+  labs(title = "Democratic Vote Share Distribution: 2024 vs AB 604",
+       subtitle = "Dashed lines show mean values",
+       x = "Democratic Vote Share",
+       y = "Number of Districts",
+       fill = "District Map",
+       color = "Mean") +
+  theme_minimal()
+```

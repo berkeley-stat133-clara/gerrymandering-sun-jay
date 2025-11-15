@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>California Proposition 50: Gerrymandering Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="dashboard_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-html/popper.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dashboard_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dashboard_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-dark-2fef5ea3f8957b3e4ecc936fc74692ca.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="dashboard_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="dashboard_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dashboard_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="dashboard_files/libs/bootstrap/bootstrap-b7bd2291ddbeaabe396b4d601b8ded31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="dashboard_files/libs/bootstrap/bootstrap-dark-b7bd2291ddbeaabe396b4d601b8ded31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="light">
+<link href="dashboard_files/libs/bootstrap/bootstrap-b7bd2291ddbeaabe396b4d601b8ded31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="dashboard_files/libs/quarto-dashboard/quarto-dashboard.js"></script>
+<script src="dashboard_files/libs/quarto-dashboard/stickythead.js"></script>
+
+
+
+<script src="dashboard_files/libs/quarto-dashboard/web-components.js" type="module"></script>
+<script src="dashboard_files/libs/quarto-dashboard/components.js"></script>
+
+<link href="dashboard_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="dashboard_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="dashboard_files/libs/plotly-binding-4.11.0/plotly.js"></script>
+<script src="dashboard_files/libs/typedarray-0.1/typedarray.min.js"></script>
+<script src="dashboard_files/libs/jquery-3.5.1/jquery.min.js"></script>
+<link href="dashboard_files/libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
+<script src="dashboard_files/libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+<link href="dashboard_files/libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet">
+<script src="dashboard_files/libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
+
+
+</head>
+
+<body class="quarto-dashboard dashboard-fill fullcontent quarto-light">
+
+<header id="quarto-dashboard-header">
+<nav class="navbar navbar-expand-md slim" data-bs-theme="dark">
+  <div class="navbar-container container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-collapse" aria-controls="dashboard-collapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>    
+
+
+    <div class="navbar-brand-container">       
+
+      <div class="navbar-title">
+        <div class="navbar-title-text"><a href="#">California Proposition 50: Gerrymandering Analysis</a></div>
+        
+        
+      </div>
+    </div>
+<div id="dashboard-collapse" class="navbar-collapse collapse"><ul class="navbar-nav navbar-nav-scroll me-auto" role="tablist"><li class="nav-item" role="presentation"><a id="tab-overview" class="nav-link active" data-bs-toggle="tab" role="tab" data-bs-target="#overview" data-scrolling="false" href="#overview" aria-controls="overview" aria-selected="true"><span class="nav-link-text">Overview</span></a></li><li class="nav-item" role="presentation"><a id="tab-analysis" class="nav-link" data-bs-toggle="tab" role="tab" data-bs-target="#analysis" data-scrolling="false" href="#analysis" aria-controls="analysis" aria-selected="false"><span class="nav-link-text">Analysis</span></a></li><li class="nav-item" role="presentation"><a id="tab-methodology" class="nav-link" data-bs-toggle="tab" role="tab" data-bs-target="#methodology" data-scrolling="false" href="#methodology" aria-controls="methodology" aria-selected="false"><span class="nav-link-text">Methodology</span></a></li></ul></div></div>
+</nav>
+</header>
+<div class="page-layout-custom quarto-dashboard-content bslib-gap-spacing html-fill-container bslib-page-fill quarto-dashboard-pages">  
+
+<div class="bslib-grid-item html-fill-item tab-content bslib-grid" data-layout="fill" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div id="overview" class="dashboard-page tab-pane show active html-fill-item html-fill-container" data-orientation="columns" aria-labelledby="tab-overview">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 50fr) minmax(3em, 50fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr) minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Seat Distribution (2024)" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title"><span style="display: inline">
+Seat Distribution (2024)
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-fill-item html-fill-container" id="htmlwidget-6b179af1d3c81ea06fe4" style="width:100%;height:406px;"></div>
+<script type="application/json" data-for="htmlwidget-6b179af1d3c81ea06fe4">{"x":{"visdat":{"a573ccc9aa5":["function () ","plotlyVisDat"]},"cur_data":"a573ccc9aa5","attrs":{"a573ccc9aa5":{"labels":{},"values":{},"marker":{"colors":["#2E5DA6","#C92C34"]},"textinfo":"label+value+percent","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"pie"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"showlegend":true,"hovermode":"closest"},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"labels":["Democrats","Republicans"],"values":[44,9],"marker":{"color":"rgba(31,119,180,1)","colors":["#2E5DA6","#C92C34"],"line":{"color":"rgba(255,255,255,1)"}},"textinfo":"label+value+percent","type":"pie","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-primary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-people-fill"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Democratic Seats
+</p>
+<p class="value-box-value">
+44
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div><div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-graph-up"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Mean-Median Score
+</p>
+<p class="value-box-value">
+-0.0132
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div><div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-bar-chart"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Efficiency Gap
+</p>
+<p class="value-box-value">
+-0.2306
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr) minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Seat Distribution (AB 604)" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title"><span style="display: inline">
+Seat Distribution (AB 604)
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-fill-item html-fill-container" id="htmlwidget-b617dd1cf0a83fed3465" style="width:100%;height:406px;"></div>
+<script type="application/json" data-for="htmlwidget-b617dd1cf0a83fed3465">{"x":{"visdat":{"a5732b418d3d":["function () ","plotlyVisDat"]},"cur_data":"a5732b418d3d","attrs":{"a5732b418d3d":{"labels":{},"values":{},"marker":{"colors":["#2E5DA6","#C92C34"]},"textinfo":"label+value+percent","alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"pie"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"showlegend":true,"hovermode":"closest"},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"labels":["Democrats","Republicans"],"values":[48,4],"marker":{"color":"rgba(31,119,180,1)","colors":["#2E5DA6","#C92C34"],"line":{"color":"rgba(255,255,255,1)"}},"textinfo":"label+value+percent","type":"pie","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-primary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-people-fill"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Democratic Seats
+</p>
+<p class="value-box-value">
+48
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div><div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-graph-up"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Mean-Median Score
+</p>
+<p class="value-box-value">
+0.0287
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div><div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-bar-chart"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Efficiency Gap
+</p>
+<p class="value-box-value">
+-0.1843
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div>
+</div>
+</div>
+<div id="analysis" class="dashboard-page tab-pane grid-skip html-fill-item html-fill-container" data-orientation="rows" aria-labelledby="tab-analysis">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 30fr) minmax(3em, 70fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-primary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-arrow-up-right"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Democratic Seat Change
+</p>
+<p class="value-box-value">
++4
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-graph-up-arrow"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Mean-Median Change
+</p>
+<p class="value-box-value">
++0.0418
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card valuebox cell html-fill-item html-fill-container bslib-card bslib-value-box bg-secondary showcase-left-center" data-bslib-card-init="" data-require-bs-caller="card()">
+<div class="card-body html-fill-item html-fill-container">
+<div class="html-fill-item html-fill-container value-box-grid">
+<div class="value-box-showcase html-fill-item html-fill-container">
+
+<i class="bi bi-bar-chart-steps"></i></div>
+<div class="value-box-area">
+<p class="value-box-title">
+Efficiency Gap Change
+</p>
+<p class="value-box-value">
++0.0464
+</p>
+</div>
+</div>
+</div>
+<script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div>
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr) minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Democratic Vote Share by District" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title"><span style="display: inline">
+Democratic Vote Share by District
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-fill-item html-fill-container" id="htmlwidget-84ff74115604d0cc45b0" style="width:100%;height:406px;"></div>
+<script type="application/json" data-for="htmlwidget-84ff74115604d0cc45b0">{"x":{"visdat":{"a57316574842":["function () ","plotlyVisDat"]},"cur_data":"a57316574842","attrs":{"a57316574842":{"x":{},"nbinsx":20,"color":{},"colors":["gray","steelblue"],"alpha":0.59999999999999998,"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"histogram"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"barmode":"overlay","xaxis":{"domain":[0,1],"automargin":true,"title":"Democratic Vote Share","tickformat":".0%"},"yaxis":{"domain":[0,1],"automargin":true,"title":"Number of Districts"},"title":"Distribution of Democratic Vote Share: 2024 vs AB 604","hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[0.62145352850100233,0.36057433112204385,0.73116986470952339,0.46057737213231015,0.67812231465751938,0.40009384778910745,0.59096697005735288,0.68089976570292676,0.75137553661043599,0.5332095532029133,0.67845108791581865,0.81948522188228035,1,0.53058378410028295,0.69080235768500431,0.74279243063490885,1,0.68982071242940157,0.66004647514389991,0.70578313590019714,0,0.54105471017333473,0.48131899451860977,0.41369758816440477,0.64127675985915955,0.57777096209030598,0.57578574261801307,0.52866513273120641,0.66311296326652436,0.71043246894766987,0.69677119398669918,0.61177050234409081,0.6754798791194353,0.60294276032907224,1,0.5987827991277348,0.70008237066800605,1,0.61285751787234466,0.58176349591279153,0.46255491234487572,0.49848265659434687,0.69444600600924355,0.76194578282707315,0.7259569420162717,0.51624944530006001,0.64831345251951444,0.52966842533678682,0.42192536526553442,0.53687864820300324,0.6566620907171572,0.62135575991650349,0.67650217047333472],"nbinsx":20,"type":"histogram","name":"2024","marker":{"color":"rgba(190,190,190,0.6)","line":{"color":"rgba(190,190,190,1)"}},"textfont":{"color":"rgba(190,190,190,0.6)"},"error_y":{"color":"rgba(190,190,190,0.6)"},"error_x":{"color":"rgba(190,190,190,0.6)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.5629864692105101,0.62417652972077431,0.55071429647117942,0.5833569248727315,0.37700175744423975,0.54465202537939972,0.58168823698283301,0.6961142752194347,0.59856522217533992,0.67722769107880676,0.81947405124015815,0.99996584961404156,0.54688729056016994,0.68679058921585145,0.74276389348041749,0.99382247614696173,0.69458634713832001,0.65687470422194705,0.70577089448225139,0.14225279549484968,0.53519570412642259,0.50242806788660754,0.40556034520772549,0.64071760512862919,0.58632766294069361,0.58843460362482314,0.56230546736030984,0.65744335842195878,0.70260775713675272,0.69164953175337629,0.58465561506382779,0.63610194825171251,0.60145289597414309,0.99979058577492141,0.57393544296892252,0.70013226370355841,0.99990905536270003,0.57478781851187866,0.58115307470097022,0.4452560108043836,0.60244979026850976,0.57433302252894192,0.76189804446865927,0.74419063377895622,0.53959256243269493,0.62998517545285926,0.5450702028165596,0.52854689738144311,0.5588240736715816,0.59503920699855561,0.60145336791380566,0.65352605317266921],"nbinsx":20,"type":"histogram","name":"AB 604","marker":{"color":"rgba(70,130,180,0.6)","line":{"color":"rgba(70,130,180,1)"}},"textfont":{"color":"rgba(70,130,180,0.6)"},"error_y":{"color":"rgba(70,130,180,0.6)"},"error_x":{"color":"rgba(70,130,180,0.6)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="card cell html-fill-item html-fill-container bslib-card" data-title="Competitiveness by Map" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-header"><div class="card-title"><span style="display: inline">
+Competitiveness by Map
+</span></div></div>
+<div class="card-body html-fill-item html-fill-container">
+<div class="cell-output-display html-fill-item html-fill-container">
+<div class="plotly html-widget html-fill-item html-fill-container" id="htmlwidget-f98ab78f034796832934" style="width:100%;height:406px;"></div>
+<script type="application/json" data-for="htmlwidget-f98ab78f034796832934">{"x":{"visdat":{"a573c981d18":["function () ","plotlyVisDat"]},"cur_data":"a573c981d18","attrs":{"a573c981d18":{"x":{},"y":{},"color":{},"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"bar"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"barmode":"stack","xaxis":{"domain":[0,1],"automargin":true,"title":"","type":"category","categoryorder":"array","categoryarray":["2024","AB 604"]},"yaxis":{"domain":[0,1],"automargin":true,"title":"Number of Districts"},"title":"District Competitiveness Comparison","hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":["2024","AB 604"],"y":[8,17],"type":"bar","name":"Competitive (<10% margin)","marker":{"color":"rgba(102,194,165,1)","line":{"color":"rgba(102,194,165,1)"}},"textfont":{"color":"rgba(102,194,165,1)"},"error_y":{"color":"rgba(102,194,165,1)"},"error_x":{"color":"rgba(102,194,165,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2024","AB 604"],"y":[11,7],"type":"bar","name":"Highly Competitive (<5% margin)","marker":{"color":"rgba(252,141,98,1)","line":{"color":"rgba(252,141,98,1)"}},"textfont":{"color":"rgba(252,141,98,1)"},"error_y":{"color":"rgba(252,141,98,1)"},"error_x":{"color":"rgba(252,141,98,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2024","AB 604"],"y":[20,16],"type":"bar","name":"Leaning (<20% margin)","marker":{"color":"rgba(141,160,203,1)","line":{"color":"rgba(141,160,203,1)"}},"textfont":{"color":"rgba(141,160,203,1)"},"error_y":{"color":"rgba(141,160,203,1)"},"error_x":{"color":"rgba(141,160,203,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":["2024","AB 604"],"y":[14,12],"type":"bar","name":"Safe (>20% margin)","marker":{"color":"rgba(231,138,195,1)","line":{"color":"rgba(231,138,195,1)"}},"textfont":{"color":"rgba(231,138,195,1)"},"error_y":{"color":"rgba(231,138,195,1)"},"error_x":{"color":"rgba(231,138,195,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div>
+</div>
+</div>
+</div>
+<div id="methodology" class="dashboard-page tab-pane grid-skip html-fill-item html-fill-container" data-orientation="rows" aria-labelledby="tab-methodology">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, 1fr); grid-auto-columns: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-columns: minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr) minmax(3em, 1fr);
+grid-auto-rows: minmax(0, 1fr);">
+<div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="card html-fill-item html-fill-container bslib-card" data-fill="false" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-body html-fill-item html-fill-container">
+<p>This analysis uses official election data from the California Secretary of State and the Statewide Database:</p>
+<ul>
+<li><strong>2024 General Election Results</strong>: Precinct-level statement of vote (SV and SR precincts)</li>
+<li><strong>AB 604 District Boundaries</strong>: Census block assignments from the Assembly Elections Committee</li>
+<li><strong>Candidate Information</strong>: Party affiliations for all congressional candidates</li>
+<li><strong>Census Block Data</strong>: Registration precinct to block correspondence from Statewide Database</li>
+</ul>
+<p>All data accessed October-November 2025.</p>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="card html-fill-item html-fill-container bslib-card" data-fill="false" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-body html-fill-item html-fill-container">
+<strong>Part 2: Cleaning 2024 Election Data</strong>
+<ol type="1">
+<li>Loaded 51,123 precinct-level records from 2024 General Election</li>
+<li>Handled suppressed values (marked as “***” for privacy) by converting to NA</li>
+<li>Converted vote columns to numeric type</li>
+<li>Validated precinct key uniqueness and district assignments</li>
+<li>Aggregated votes to 53 congressional districts</li>
+</ol>
+<strong>Part 5: Simulating AB 604 Results (Proportional Allocation)</strong>
+<ol type="1">
+<li>Loaded SR precinct voting data (geographic precincts with stable boundaries)</li>
+<li>Obtained census block-to-precinct mapping with voter registration counts</li>
+<li>Loaded AB 604 block assignments (519,723 census blocks mapped to 52 new districts)</li>
+<li>Allocated SR precinct votes to census blocks proportionally based on registered voters</li>
+<li>Aggregated census block votes to AB 604 districts</li>
+</ol>
+<p>This approach assumes voters are distributed proportionally to registered voters within each precinct.</p>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="card html-fill-item html-fill-container bslib-card" data-fill="false" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-body html-fill-item html-fill-container">
+<strong>Mean-Median Score</strong>
+<p>Measures asymmetry in vote distribution. Calculated as the difference between mean and median vote share across districts for one party.</p>
+<ul>
+<li><strong>Positive score</strong>: The favored party’s votes are “packed” into fewer districts</li>
+<li><strong>Negative score</strong>: The opposing party’s votes are packed</li>
+<li><strong>Near zero</strong>: More symmetric distribution</li>
+</ul>
+<strong>Efficiency Gap</strong>
+<p>Measures wasted votes - votes that don’t contribute to winning a seat. Wasted votes include:</p>
+<ul>
+<li>All votes for losing candidates</li>
+<li>Surplus votes (above 50%) for winning candidates</li>
+</ul>
+<p>Formula: (Wasted votes for party A - Wasted votes for party B) / Total votes</p>
+<ul>
+<li><strong>Positive gap</strong>: Party A wastes more votes (disadvantaged)</li>
+<li><strong>Negative gap</strong>: Party B wastes more votes (disadvantaged)</li>
+<li><strong>Near zero</strong>: Votes wasted equally</li>
+</ul>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="card html-fill-item html-fill-container bslib-card" data-fill="false" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-body html-fill-item html-fill-container">
+<ol type="1">
+<li><p><strong>Single Election Analysis</strong>: These metrics use only 2024 election results. Gerrymandering assessment is more robust across multiple election cycles.</p></li>
+<li><p><strong>Third-Party Candidates</strong>: Our analysis focuses on Democrat vs Republican races. Districts with significant third-party or independent candidates may have different dynamics.</p></li>
+<li><p><strong>Proportional Allocation Assumption</strong>: AB 604 analysis assumes voters are distributed within precincts proportionally to registered voters. Actual turnout patterns may differ.</p></li>
+<li><p><strong>Block Assignment Timing</strong>: Census blocks may have changed between 2020 census and 2024 election, introducing minor geographic discrepancies.</p></li>
+<li><p><strong>No Geographic Context</strong>: These metrics don’t account for Communities of Interest, geographic constraints, or Voting Rights Act requirements that may justify certain district shapes.</p></li>
+<li><p><strong>Statistical Thresholds</strong>: There is no universally agreed threshold for “acceptable” levels of these metrics. Courts have used various standards.</p></li>
+</ol>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+</div><div class="html-fill-item html-fill-container bslib-grid" style="display: grid; grid-template-rows: minmax(3em, max-content); grid-auto-columns: minmax(0, 1fr);">
+<div class="card html-fill-item html-fill-container bslib-card" data-fill="false" data-bslib-card-init="" data-require-bs-caller="card()" data-full-screen="false">
+<div class="card-body html-fill-item html-fill-container">
+<strong>Will the adoption of the new district map (AB 604) lead to an increase in partisan advantage relative to 2024?</strong>
+<p><strong>Answer</strong>: Based on our analysis:</p>
+<ul>
+<li><strong>Seat Distribution</strong>: AB 604 would result in 4 additional Democratic seats</li>
+<li><strong>Mean-Median Score</strong>: Changed from -0.0132 to 0.0287 (change: +0.0418)</li>
+<li><strong>Efficiency Gap</strong>: Changed from -0.2306 to -0.1843 (change: +0.0464)</li>
+</ul>
+<p>The direction and magnitude of these changes suggest AB 604 may increase partisan advantage.</p>
+<hr>
+<em>Analysis conducted for STAT 133, Fall 2025</em>
+<em>Data sources: California Secretary of State, Statewide Database, Assembly Elections Committee</em>
+</div>
+<bslib-tooltip placement="auto" bsoptions="[]" data-require-bs-version="5" data-require-bs-caller="tooltip()">
+    <template>Expand</template>
+    <span class="bslib-full-screen-enter badge rounded-pill">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" style="height:1em;width:1em;" aria-hidden="true" role="img"><path d="M20 5C20 4.4 19.6 4 19 4H13C12.4 4 12 3.6 12 3C12 2.4 12.4 2 13 2H21C21.6 2 22 2.4 22 3V11C22 11.6 21.6 12 21 12C20.4 12 20 11.6 20 11V5ZM4 19C4 19.6 4.4 20 5 20H11C11.6 20 12 20.4 12 21C12 21.6 11.6 22 11 22H3C2.4 22 2 21.6 2 21V13C2 12.4 2.4 12 3 12C3.6 12 4 12.4 4 13V19Z"></path></svg>
+    </span>
+</bslib-tooltip><script data-bslib-card-init="">bslib.Card.initializeAllCards();</script></div>
+<div id="3ade8a4a-fb1d-4a6c-8409-ac45482d5fc9" class="hidden html-fill-item html-fill-container">
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /container fluid -->
+
+<script type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (_event) {
+  if (window.bslib.Card) {
+    window.bslib.Card.initializeAllCards();
+  }
+}); 
+</script>
+  
+
+
+
+</body></html>

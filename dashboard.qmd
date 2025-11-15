@@ -1,5 +1,383 @@
 ---
-title: Dashboard
+title: "California Proposition 50: Gerrymandering Analysis"
 format: dashboard
 ---
 
+```{r}
+#| include: false
+library(tidyverse)
+library(scales)
+library(plotly)
+
+# Load all data and calculations
+source_data <- function() {
+  # Load cleaned data
+  precinct_data <- read_csv("data/g24_sov_by_g24_svprec_clean.csv", show_col_types = FALSE)
+  candidates <- read_csv("data/g24-candidates-by-district.csv", show_col_types = FALSE)
+  ab604_results <- read_csv("data/ab604_district_results.csv", show_col_types = FALSE)
+
+  # Helper functions
+  calculate_wasted_votes <- function(votes_a, votes_b) {
+    total_votes <- votes_a + votes_b
+    win_threshold <- total_votes / 2
+    wasted_a <- ifelse(votes_a > votes_b, votes_a - win_threshold, votes_a)
+    wasted_b <- ifelse(votes_b > votes_a, votes_b - win_threshold, votes_b)
+    return(list(wasted_a = wasted_a, wasted_b = wasted_b))
+  }
+
+  calculate_mean_median <- function(vote_shares) {
+    mean(vote_shares, na.rm = TRUE) - median(vote_shares, na.rm = TRUE)
+  }
+
+  calculate_efficiency_gap <- function(votes_a, votes_b) {
+    wasted <- calculate_wasted_votes(votes_a, votes_b)
+    (sum(wasted$wasted_a) - sum(wasted$wasted_b)) / sum(votes_a + votes_b)
+  }
+
+  # Party mapping
+  cong_candidates <- candidates %>% filter(DISTRICT_TYPE == "CNG")
+  party_mapping <- cong_candidates %>%
+    select(FIELD, DISTRICT) %>%
+    mutate(party = case_when(
+      grepl("DEM", FIELD) ~ "Democrat",
+      grepl("REP", FIELD) ~ "Republican",
+      TRUE ~ "Other"
+    ))
+
+  # Process 2024
+  cong_vote_cols <- names(precinct_data)[grep("^CNG", names(precinct_data))]
+  district_votes_2024 <- precinct_data %>%
+    filter(!is.na(CDDIST)) %>%
+    group_by(CDDIST) %>%
+    summarise(across(all_of(cong_vote_cols), ~sum(., na.rm = TRUE)), .groups = "drop")
+
+  party_totals_2024 <- district_votes_2024 %>%
+    pivot_longer(cols = all_of(cong_vote_cols), names_to = "FIELD", values_to = "votes") %>%
+    left_join(party_mapping, by = "FIELD", relationship = "many-to-many") %>%
+    filter(votes > 0) %>%
+    group_by(CDDIST, party) %>%
+    summarise(total_votes = sum(votes), .groups = "drop") %>%
+    pivot_wider(names_from = party, values_from = total_votes, values_fill = 0)
+
+  dem_rep_2024 <- party_totals_2024 %>%
+    select(CDDIST, Democrat, Republican) %>%
+    mutate(
+      total = Democrat + Republican,
+      dem_share = Democrat / total,
+      winner = if_else(Democrat > Republican, "D", "R")
+    )
+
+  # Process AB 604
+  party_totals_ab604 <- ab604_results %>%
+    pivot_longer(cols = all_of(cong_vote_cols), names_to = "FIELD", values_to = "votes") %>%
+    left_join(party_mapping, by = "FIELD", relationship = "many-to-many") %>%
+    filter(votes > 0) %>%
+    group_by(AB604_DISTRICT, party) %>%
+    summarise(total_votes = sum(votes), .groups = "drop") %>%
+    pivot_wider(names_from = party, values_from = total_votes, values_fill = 0)
+
+  dem_rep_ab604 <- party_totals_ab604 %>%
+    select(AB604_DISTRICT, Democrat, Republican) %>%
+    mutate(
+      total = Democrat + Republican,
+      dem_share = Democrat / total,
+      winner = if_else(Democrat > Republican, "D", "R")
+    )
+
+  # Calculate metrics
+  list(
+    dem_rep_2024 = dem_rep_2024,
+    dem_rep_ab604 = dem_rep_ab604,
+    seats_2024_D = sum(dem_rep_2024$winner == "D"),
+    seats_2024_R = sum(dem_rep_2024$winner == "R"),
+    seats_ab604_D = sum(dem_rep_ab604$winner == "D"),
+    seats_ab604_R = sum(dem_rep_ab604$winner == "R"),
+    mm_2024 = calculate_mean_median(dem_rep_2024$dem_share),
+    mm_ab604 = calculate_mean_median(dem_rep_ab604$dem_share),
+    eg_2024 = calculate_efficiency_gap(dem_rep_2024$Democrat, dem_rep_2024$Republican),
+    eg_ab604 = calculate_efficiency_gap(dem_rep_ab604$Democrat, dem_rep_ab604$Republican)
+  )
+}
+
+data <- source_data()
+```
+
+# Overview {orientation="columns"}
+
+## Column {width="50%"}
+
+### 2024 District Map
+
+```{r}
+#| title: "Seat Distribution (2024)"
+tibble(
+  Party = c("Democrats", "Republicans"),
+  Seats = c(data$seats_2024_D, data$seats_2024_R)
+) %>%
+  plot_ly(labels = ~Party, values = ~Seats, type = "pie",
+          marker = list(colors = c("#2E5DA6", "#C92C34")),
+          textinfo = "label+value+percent") %>%
+  layout(showlegend = TRUE)
+```
+
+### Key Metrics (2024)
+
+```{r}
+#| content: valuebox
+#| title: "Democratic Seats"
+#| icon: "people-fill"
+#| color: primary
+list(
+  value = data$seats_2024_D,
+  caption = paste0(round(100 * data$seats_2024_D / 53, 1), "% of 53 seats")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Mean-Median Score"
+#| icon: "graph-up"
+list(
+  value = round(data$mm_2024, 4),
+  caption = "Closer to 0 = less gerrymandering"
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Efficiency Gap"
+#| icon: "bar-chart"
+list(
+  value = round(data$eg_2024, 4),
+  caption = "Negative = Republicans waste more"
+)
+```
+
+## Column {width="50%"}
+
+### AB 604 Proposed Map
+
+```{r}
+#| title: "Seat Distribution (AB 604)"
+tibble(
+  Party = c("Democrats", "Republicans"),
+  Seats = c(data$seats_ab604_D, data$seats_ab604_R)
+) %>%
+  plot_ly(labels = ~Party, values = ~Seats, type = "pie",
+          marker = list(colors = c("#2E5DA6", "#C92C34")),
+          textinfo = "label+value+percent") %>%
+  layout(showlegend = TRUE)
+```
+
+### Key Metrics (AB 604)
+
+```{r}
+#| content: valuebox
+#| title: "Democratic Seats"
+#| icon: "people-fill"
+#| color: primary
+list(
+  value = data$seats_ab604_D,
+  caption = paste0(round(100 * data$seats_ab604_D / 52, 1), "% of 52 seats")
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Mean-Median Score"
+#| icon: "graph-up"
+list(
+  value = round(data$mm_ab604, 4),
+  caption = "Closer to 0 = less gerrymandering"
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "Efficiency Gap"
+#| icon: "bar-chart"
+list(
+  value = round(data$eg_ab604, 4),
+  caption = "Negative = Republicans waste more"
+)
+```
+
+# Analysis {orientation="rows"}
+
+## Row {height="30%"}
+
+### Change in Seats
+
+```{r}
+#| content: valuebox
+#| title: "Democratic Seat Change"
+#| icon: "arrow-up-right"
+#| color: primary
+seat_change <- data$seats_ab604_D - data$seats_2024_D
+list(
+  value = paste0(if_else(seat_change >= 0, "+", ""), seat_change),
+  caption = paste0("From ", data$seats_2024_D, " to ", data$seats_ab604_D, " seats")
+)
+```
+
+### Change in Mean-Median
+
+```{r}
+#| content: valuebox
+#| title: "Mean-Median Change"
+#| icon: "graph-up-arrow"
+mm_change <- data$mm_ab604 - data$mm_2024
+list(
+  value = sprintf("%+.4f", mm_change),
+  caption = if_else(abs(mm_change) < 0.01, "Minimal change",
+                    "Notable change in symmetry")
+)
+```
+
+### Change in Efficiency Gap
+
+```{r}
+#| content: valuebox
+#| title: "Efficiency Gap Change"
+#| icon: "bar-chart-steps"
+eg_change <- data$eg_ab604 - data$eg_2024
+list(
+  value = sprintf("%+.4f", eg_change),
+  caption = if_else(abs(eg_change) < 0.05, "Modest change",
+                    "Significant change in efficiency")
+)
+```
+
+## Row {height="70%"}
+
+### Vote Share Distributions
+
+```{r}
+#| title: "Democratic Vote Share by District"
+comparison_data <- bind_rows(
+  data$dem_rep_2024 %>% mutate(Map = "2024", District = as.character(CDDIST)) %>% select(-CDDIST),
+  data$dem_rep_ab604 %>% mutate(Map = "AB 604", District = as.character(AB604_DISTRICT)) %>% select(-AB604_DISTRICT)
+)
+
+plot_ly(comparison_data, x = ~dem_share, color = ~Map, type = "histogram",
+        colors = c("2024" = "gray", "AB 604" = "steelblue"),
+        nbinsx = 20, alpha = 0.6) %>%
+  layout(
+    barmode = "overlay",
+    xaxis = list(title = "Democratic Vote Share", tickformat = ".0%"),
+    yaxis = list(title = "Number of Districts"),
+    title = "Distribution of Democratic Vote Share: 2024 vs AB 604"
+  )
+```
+
+### District Competitiveness
+
+```{r}
+#| title: "Competitiveness by Map"
+comp_summary <- comparison_data %>%
+  mutate(competitiveness = case_when(
+    abs(dem_share - 0.5) < 0.05 ~ "Highly Competitive (<5% margin)",
+    abs(dem_share - 0.5) < 0.10 ~ "Competitive (<10% margin)",
+    abs(dem_share - 0.5) < 0.20 ~ "Leaning (<20% margin)",
+    TRUE ~ "Safe (>20% margin)"
+  )) %>%
+  count(Map, competitiveness)
+
+plot_ly(comp_summary, x = ~Map, y = ~n, color = ~competitiveness, type = "bar") %>%
+  layout(
+    barmode = "stack",
+    xaxis = list(title = ""),
+    yaxis = list(title = "Number of Districts"),
+    title = "District Competitiveness Comparison"
+  )
+```
+
+# Methodology
+
+## Column
+
+### Data Sources
+
+This analysis uses official election data from the California Secretary of State and the Statewide Database:
+
+- **2024 General Election Results**: Precinct-level statement of vote (SV and SR precincts)
+- **AB 604 District Boundaries**: Census block assignments from the Assembly Elections Committee
+- **Candidate Information**: Party affiliations for all congressional candidates
+- **Census Block Data**: Registration precinct to block correspondence from Statewide Database
+
+All data accessed October-November 2025.
+
+### Data Cleaning Process
+
+**Part 2: Cleaning 2024 Election Data**
+
+1. Loaded 51,123 precinct-level records from 2024 General Election
+2. Handled suppressed values (marked as "***" for privacy) by converting to NA
+3. Converted vote columns to numeric type
+4. Validated precinct key uniqueness and district assignments
+5. Aggregated votes to 53 congressional districts
+
+**Part 5: Simulating AB 604 Results (Proportional Allocation)**
+
+1. Loaded SR precinct voting data (geographic precincts with stable boundaries)
+2. Obtained census block-to-precinct mapping with voter registration counts
+3. Loaded AB 604 block assignments (519,723 census blocks mapped to 52 new districts)
+4. Allocated SR precinct votes to census blocks proportionally based on registered voters
+5. Aggregated census block votes to AB 604 districts
+
+This approach assumes voters are distributed proportionally to registered voters within each precinct.
+
+### Gerrymandering Metrics
+
+**Mean-Median Score**
+
+Measures asymmetry in vote distribution. Calculated as the difference between mean and median vote share across districts for one party.
+
+- **Positive score**: The favored party's votes are "packed" into fewer districts
+- **Negative score**: The opposing party's votes are packed
+- **Near zero**: More symmetric distribution
+
+**Efficiency Gap**
+
+Measures wasted votes - votes that don't contribute to winning a seat. Wasted votes include:
+
+- All votes for losing candidates
+- Surplus votes (above 50%) for winning candidates
+
+Formula: (Wasted votes for party A - Wasted votes for party B) / Total votes
+
+- **Positive gap**: Party A wastes more votes (disadvantaged)
+- **Negative gap**: Party B wastes more votes (disadvantaged)
+- **Near zero**: Votes wasted equally
+
+### Caveats and Limitations
+
+1. **Single Election Analysis**: These metrics use only 2024 election results. Gerrymandering assessment is more robust across multiple election cycles.
+
+2. **Third-Party Candidates**: Our analysis focuses on Democrat vs Republican races. Districts with significant third-party or independent candidates may have different dynamics.
+
+3. **Proportional Allocation Assumption**: AB 604 analysis assumes voters are distributed within precincts proportionally to registered voters. Actual turnout patterns may differ.
+
+4. **Block Assignment Timing**: Census blocks may have changed between 2020 census and 2024 election, introducing minor geographic discrepancies.
+
+5. **No Geographic Context**: These metrics don't account for Communities of Interest, geographic constraints, or Voting Rights Act requirements that may justify certain district shapes.
+
+6. **Statistical Thresholds**: There is no universally agreed threshold for "acceptable" levels of these metrics. Courts have used various standards.
+
+### Research Question
+
+**Will the adoption of the new district map (AB 604) lead to an increase in partisan advantage relative to 2024?**
+
+**Answer**: Based on our analysis:
+
+- **Seat Distribution**: AB 604 would result in `r data$seats_ab604_D - data$seats_2024_D` additional Democratic seats
+- **Mean-Median Score**: Changed from `r round(data$mm_2024, 4)` to `r round(data$mm_ab604, 4)` (change: `r sprintf("%+.4f", data$mm_ab604 - data$mm_2024)`)
+- **Efficiency Gap**: Changed from `r round(data$eg_2024, 4)` to `r round(data$eg_ab604, 4)` (change: `r sprintf("%+.4f", data$eg_ab604 - data$eg_2024)`)
+
+The direction and magnitude of these changes suggest `r if_else(abs(data$mm_ab604) > abs(data$mm_2024) | abs(data$eg_ab604) > abs(data$eg_2024), "AB 604 may increase partisan advantage", "AB 604 may not substantially increase partisan advantage")`.
+
+---
+
+*Analysis conducted for STAT 133, Fall 2025*
+
+*Data sources: California Secretary of State, Statewide Database, Assembly Elections Committee*
